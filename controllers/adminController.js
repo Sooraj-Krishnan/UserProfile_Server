@@ -16,10 +16,10 @@ const bcrypt = require("bcrypt");
 //const { exec } = require("child_process");
 
 //const QRBase = process.env.MENU_CARD_QR_URL;
-//const S3Url = process.env.AWS_BUCKET_URL;
+const S3Url = process.env.AWS_BUCKET_URL;
 
-//const generateFileName = (bytes = 32) =>
-//crypto.randomBytes(bytes).toString("hex");
+// const generateFileName = (bytes = 32) =>
+//   crypto.randomBytes(bytes).toString("hex");
 
 const adminDashboard = async (req, res, next) => {
   try {
@@ -52,6 +52,53 @@ const adminDashboard = async (req, res, next) => {
   } catch (error) {
     console.error(error.message);
     next(error);
+  }
+};
+
+const editAdminProfile = async (req, res, next) => {
+  try {
+    // Find the admin by the ID from the authenticated user
+    const admin = await Admin.findById(req.user._id);
+
+    // If no admin is found, return an error
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "No user found" });
+    }
+
+    // Get the updated data from the request body
+    const { name, email, bio, profileImageUrl, isPublic } = req.body;
+    const updatedData = {
+      name,
+      email,
+      bio,
+      profileImage: profileImageUrl,
+      isPublic,
+    };
+
+    // If a new password is provided, hash it before updating
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      updatedData.password = hashedPassword;
+    }
+
+    // Update the admin document with the new data
+    const updatedAdmin = await Admin.findByIdAndUpdate(
+      req.user._id,
+      { $set: updatedData },
+      { new: true }
+    );
+
+    // Send a success response with the updated admin data
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      admin: updatedAdmin,
+    });
+  } catch (error) {
+    // Handle any errors that occurred
+    console.error("Error updating admin profile:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -172,6 +219,7 @@ const deleteManager = async (req, res, next) => {
 
 module.exports = {
   adminDashboard,
+  editAdminProfile,
   createManager,
   editManager,
   viewManagers,

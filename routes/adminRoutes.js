@@ -6,10 +6,12 @@ const {
   viewManagers,
   blockManager,
   deleteManager,
+  editAdminProfile,
 } = require("../controllers/adminController");
 const { verifyJwt } = require("../helpers/verify_jwt");
 
 router.get("/admin-dashboard", verifyJwt, adminDashboard);
+router.put("/edit-admin-profile", verifyJwt, editAdminProfile);
 router.post("/create-manager", verifyJwt, createManager);
 router.put("/edit-manager/:id", verifyJwt, editManager);
 router.get("/view-managers", verifyJwt, viewManagers);

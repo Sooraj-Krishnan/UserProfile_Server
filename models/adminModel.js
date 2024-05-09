@@ -17,7 +17,7 @@ const AdminSchema = mongoose.Schema({
   },
   cardLimit: {
     type: Number,
-    default: 1,
+    default: 1000,
   },
   password: {
     type: String,
@@ -37,6 +37,17 @@ const AdminSchema = mongoose.Schema({
   },
   expiryDate: {
     type: Number,
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  isPublic: {
+    type: Boolean,
+    default: false,
+  },
+  bio: {
+    type: String,
   },
 });
 mongoose.set("strictQuery", false);
