@@ -2,6 +2,7 @@ const Manager = require("../models/managerModel");
 const Admin = require("../models/adminModel");
 const KitchenStaff = require("../models/kitchenStaffModel");
 const Waiter = require("../models/waiterModel");
+const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
@@ -14,6 +15,32 @@ const { sendMailResetPass } = require("../helpers/sendMailResetPass");
 let refreshTokenArray = [];
 
 /* ---------------------------------- login --------------------------------- */
+
+const signup = async (req, res, next) => {
+  const { name, email, phone, password } = req.body;
+  try {
+    // check weather the user is already exist
+    let isExist = await Admin.findOne({ email: email });
+    if (isExist) throw createError.Conflict("This email already in use");
+
+    // hasing the password
+    const hash = await bcrypt.hash(password, 12);
+
+    const newUser = new Admin({
+      name,
+      email,
+
+      phone,
+      password: hash,
+    });
+
+    const user = await newUser.save();
+    res.send({ success: true, user });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
@@ -395,4 +422,5 @@ module.exports = {
   logout,
   forgotPassword,
   updateNewPassword,
+  signup,
 };
