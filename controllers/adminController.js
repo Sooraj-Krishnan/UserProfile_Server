@@ -102,6 +102,54 @@ const editAdminProfile = async (req, res, next) => {
   }
 };
 
+const viewAllUsers = async (req, res, next) => {
+  try {
+    const admin = await Admin.findById(req.user._id); // Find the admin user
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    if (admin.isAdmin) {
+      // If the user is an admin, send back all users except the admin
+      const users = await Admin.find({ _id: { $ne: req.user._id } });
+
+      return res.status(200).json({
+        success: true,
+        message: "All users fetched successfully",
+        users: users,
+      });
+    } else if (admin.isPublic) {
+      // If the user is not an admin but their profile is public, send back all public users except the user
+      const users = await Admin.find({
+        _id: { $ne: req.user._id },
+        isPublic: true,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "All public users fetched successfully",
+        users: users,
+      });
+    } else {
+      // If the user is not an admin and their profile is not public, send back an error
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view other profiles.",
+      });
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 const createManager = async (req, res, next) => {
   try {
     const { name, email, password, cardLimit } = req.body;
@@ -220,6 +268,7 @@ const deleteManager = async (req, res, next) => {
 module.exports = {
   adminDashboard,
   editAdminProfile,
+  viewAllUsers,
   createManager,
   editManager,
   viewManagers,
